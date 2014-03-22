@@ -6,14 +6,11 @@ The calculations needs still some improvement!
 The low frequencies are too dominant at this state.
 """
 
-__author__ = 'Road Runner, Willy Coyote'
-__copyright__ = 'Copyright 2014, Acme Inc.'
-__credits__ = ['Road Runner', 'Road Runners best friend Harrold']
-__license__ = 'MIT'
+__author__ = 'coon'
+__copyright__ = 'Copyright 2014, c-base e.V.'
 __version__ = '0.0.1'
-__maintainer__ = 'Road Runners other friend Herb'
-__email__ = 'appteam@acme.com'
-__status__ = 'Development'
+__email__ = 'coon@c-base.org'
+__status__ = 'experimental'
 
 from sys import byteorder
 from array import array
