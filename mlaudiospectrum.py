@@ -65,8 +65,9 @@ bar_colors = [
 ]
 
 def sendSpectrumToMateLight(spectrum_list):
-    IP = "matelight.cbrp3.c-base.org"
+    #IP = "matelight.cbrp3.c-base.org"
     #IP = "localhost"
+    IP = "matelight.rocks"
     PORT = 1337
 
     # scale resolution to matelight
