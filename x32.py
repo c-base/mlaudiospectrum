@@ -27,31 +27,34 @@ ML_HEIGHT = 16
 ML_WIDTH  = 40
 MAX_AUDIO_HEIGHT = 128
 
-def RGB(red, green, blue):
+
+def rgb(red, green, blue):
     return red | green << 8 | blue << 16
 
+
 bar_colors = [
-    RGB(255, 0,     0),
-    RGB(255, 0,     0),
-    RGB(255, 0,     0),
-    RGB(255, 0,     0),
-    RGB(255, 64,   15),
-    RGB(255, 127,  36),
-    RGB(255, 127,  36),
-    RGB(255, 127,  36),
-    RGB(255, 200,   0),
-    RGB(255, 255,   0),
-    RGB(255, 255,   0),
-    RGB(255, 255,   0),
-    RGB(192, 255,   0),
-    RGB(0,   255,   0),
-    RGB(0,   255,   0),
-    RGB(0,   255,   0)
+    rgb(255, 0,     0),
+    rgb(255, 0,     0),
+    rgb(255, 0,     0),
+    rgb(255, 0,     0),
+    rgb(255, 64,   15),
+    rgb(255, 127,  36),
+    rgb(255, 127,  36),
+    rgb(255, 127,  36),
+    rgb(255, 200,   0),
+    rgb(255, 255,   0),
+    rgb(255, 255,   0),
+    rgb(255, 255,   0),
+    rgb(192, 255,   0),
+    rgb(0,   255,   0),
+    rgb(0,   255,   0),
+    rgb(0,   255,   0)
 ]
 
-def sendSpectrumToMateLight(spectrum_list):
-    IP = "matelight"
-    PORT = 1337
+
+def send_pectrum_to_matelight(spectrum_list):
+    ip = "matelight"
+    port = 1337
 
     ml_buffer = numpy.zeros((ML_WIDTH, ML_HEIGHT))
 
@@ -66,16 +69,17 @@ def sendSpectrumToMateLight(spectrum_list):
 
     for y in range(ML_HEIGHT):
         for x in range(ML_WIDTH):
-            r = int(ml_buffer[x][y])          & 0xFF
-            g = (int(ml_buffer[x][y]) >> 8)   & 0xFF
-            b = (int(ml_buffer[x][y]) >> 16)  & 0xFF
+            r = int(ml_buffer[x][y]) & 0xFF
+            g = (int(ml_buffer[x][y]) >> 8) & 0xFF
+            b = (int(ml_buffer[x][y]) >> 16) & 0xFF
 
             image += struct.pack('BBB', r, g, b)
 
     image += checksum
 
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    sock.sendto(image, (IP, PORT))
+    sock.sendto(image, (ip, port))
+
 
 def dec(data):
     for i in range(23, len(data), 2):
@@ -87,7 +91,11 @@ def dec(data):
         f = 128 + numpy.short(d[0]) / 256.0
         yield f
 
-payload = '/batchsubscribe\x00,ssiii\x00\x00meters/15\x00\x00\x00/meters/15\x00\x00\x00\x00\x00\x10\x00\x00\x00\x10\x00\x00\x00\x01'
+
+payload = '/batchsubscribe\x00'\
+          ',ssiii\x00\x00'\
+          'meters/15\x00\x00\x00'\
+          '/meters/15\x00\x00\x00\x00\x00\x10\x00\x00\x00\x10\x00\x00\x00\x01'
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 start = 0
 
@@ -104,4 +112,4 @@ while True:
     l = l[5:-5] # cut off the first 5 and the last 5 bars
     l = [2 * i for i in l] # double the gain
     # termplot.plot([128] + l)
-    sendSpectrumToMateLight(l)
+    send_pectrum_to_matelight(l)
