@@ -53,7 +53,8 @@ bar_colors = [
 
 
 def send_pectrum_to_matelight(spectrum_list):
-    ip = "matelight"
+    # ip = "matelight"
+    ip = "matehost"  # only for docker compose
     port = 1337
 
     ml_buffer = numpy.zeros((ML_WIDTH, ML_HEIGHT))
@@ -106,7 +107,9 @@ while True:
     if time.time() - start >= 5:
         print("xmit")
         # TODO: xmit /renew instead of /batchsubscribe again?
-        sock.sendto(payload.encode(), ('x32rack', 10023))
+        # sock.sendto(payload.encode(), ('x32rack', 10023))
+        sock.sendto(payload.encode(), ('10.0.1.37', 10023))  # only for docker compose
+
         start = time.time()
 
     print("now receiving...")
@@ -115,6 +118,6 @@ while True:
     l = list(dec(response))
     l = l[::2] # only use every second bar
     l = l[5:-5] # cut off the first 5 and the last 5 bars
-    l = [2 * i for i in l] # double the gain
+    # l = [2 * i for i in l] # double the gain
     # termplot.plot([128] + l)
     send_pectrum_to_matelight(l)
