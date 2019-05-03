@@ -4,9 +4,6 @@
 Audio spectrum analyzer for mate light which talks over OSC to a Behringer X32 Rack as a data source.
 
 # TODO:
-# - use UDP socket directly instead of scapy
-# - do not poll batchsubscribe OSC msg. after subscribing, the x32-rack should xmit its spectrum data
-    # automatically with an interval of 50ms for about 10s.
 # - The provides 100 frequencies but matelight is only able to display 40 since it consists of 40 columns. At this point
     every second frequency is taken and afterwards the first 5 and last 5 frequencies are cut to get to 40 columns.
     It would be better implementing some kind of interpolation.
@@ -15,13 +12,11 @@ Audio spectrum analyzer for mate light which talks over OSC to a Behringer X32 R
 
 __author__ = 'coon, uk'
 __copyright__ = 'Copyright 2019, c-base e.V.'
-__version__ = '0.1'
+__version__ = '0.2'
 __email__ = 'coon@c-base.org, uk@c-base.org'
+__date__ = '2019-05-03'
 __status__ = 'Prototype'
 
-from scapy.layers.inet import IP, UDP
-from scapy.all import Raw
-from scapy.sendrecv import sr1
 import struct
 import numpy
 import termplot
@@ -94,14 +89,21 @@ def dec(data):
         f = 128 + numpy.short(d[0]) / 256.0
         yield f
 
+sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+start = 0
 
 while True:
-    # TODO: - replace scapy.sr1() by socket.sendto()
-    #       - do not poll batchsubscribe msg. after subscribing, the x32-rack should xmit its spectrum data
-    #         automatically with an interval of 50ms for about 10s.
+    if time.time() - start >= 1:
+        # TODO: xmit /renew instead of /batchsubscribe again?
+        sock.sendto(payload.encode(), ('x32rack', 10023))
+        start = time.time()
 
-    response = sr1(IP(dst='10.0.1.37')/UDP(sport=12345, dport=10023)/Raw(load=payload))
-    l = list(dec(response.load))[::2][5:-5] # only use every second bar and cut off the first 5 and the last 5 bars
+    response = sock.recvfrom(1024)[0]
+
+    l = list(dec(response))
+    l = l[::2] # only use every second bar
+    l = l[5:-5] # cut off the first 5 and the last 5 bars
     l = [2 * i for i in l] # double the gain
     termplot.plot([128] + l)
     sendSpectrumToMateLight(l)
+
