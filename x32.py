@@ -97,14 +97,19 @@ payload = '/batchsubscribe\x00'\
           'meters/15\x00\x00\x00'\
           '/meters/15\x00\x00\x00\x00\x00\x10\x00\x00\x00\x10\x00\x00\x00\x01'
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+sock.bind(('', 10042))
 start = 0
+
+print("udp socket created")
 
 while True:
     if time.time() - start >= 5:
+        print("xmit")
         # TODO: xmit /renew instead of /batchsubscribe again?
         sock.sendto(payload.encode(), ('x32rack', 10023))
         start = time.time()
 
+    print("now receiving...")
     response = sock.recvfrom(1024)[0]
 
     l = list(dec(response))
