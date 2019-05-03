@@ -19,7 +19,7 @@ __status__ = 'Prototype'
 
 import struct
 import numpy
-import termplot
+# import termplot
 import time
 import socket
 
@@ -77,8 +77,6 @@ def sendSpectrumToMateLight(spectrum_list):
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     sock.sendto(image, (IP, PORT))
 
-payload = '/batchsubscribe\x00,ssiii\x00\x00meters/15\x00\x00\x00/meters/15\x00\x00\x00\x00\x00\x10\x00\x00\x00\x10\x00\x00\x00\x01'
-
 def dec(data):
     for i in range(23, len(data), 2):
         b = bytearray(data[i:i+2])
@@ -89,11 +87,12 @@ def dec(data):
         f = 128 + numpy.short(d[0]) / 256.0
         yield f
 
+payload = '/batchsubscribe\x00,ssiii\x00\x00meters/15\x00\x00\x00/meters/15\x00\x00\x00\x00\x00\x10\x00\x00\x00\x10\x00\x00\x00\x01'
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 start = 0
 
 while True:
-    if time.time() - start >= 1:
+    if time.time() - start >= 5:
         # TODO: xmit /renew instead of /batchsubscribe again?
         sock.sendto(payload.encode(), ('x32rack', 10023))
         start = time.time()
@@ -104,6 +103,5 @@ while True:
     l = l[::2] # only use every second bar
     l = l[5:-5] # cut off the first 5 and the last 5 bars
     l = [2 * i for i in l] # double the gain
-    termplot.plot([128] + l)
+    # termplot.plot([128] + l)
     sendSpectrumToMateLight(l)
-
