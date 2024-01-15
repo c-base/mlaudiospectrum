@@ -10,21 +10,22 @@ Audio spectrum analyzer for mate light which talks over OSC to a Behringer X32 R
 # - Add peak hold bars
 """
 
-__author__ = 'coon, uk'
-__copyright__ = 'Copyright 2019, c-base e.V.'
-__version__ = '0.2'
-__email__ = 'coon@c-base.org, uk@c-base.org'
-__date__ = '2019-05-03'
-__status__ = 'Prototype'
+__author__ = "coon, uk"
+__copyright__ = "Copyright 2019, c-base e.V."
+__version__ = "0.2"
+__email__ = "coon@c-base.org, uk@c-base.org"
+__date__ = "2019-05-03"
+__status__ = "Prototype"
 
 import struct
 import numpy
+
 # import termplot
 import time
 import socket
 
 ML_HEIGHT = 16
-ML_WIDTH  = 40
+ML_WIDTH = 40
 MAX_AUDIO_HEIGHT = 128
 
 
@@ -33,40 +34,42 @@ def rgb(red, green, blue):
 
 
 bar_colors = [
-    rgb(255, 0,     0),
-    rgb(255, 0,     0),
-    rgb(255, 0,     0),
-    rgb(255, 0,     0),
-    rgb(255, 64,   15),
-    rgb(255, 127,  36),
-    rgb(255, 127,  36),
-    rgb(255, 127,  36),
-    rgb(255, 200,   0),
-    rgb(255, 255,   0),
-    rgb(255, 255,   0),
-    rgb(255, 255,   0),
-    rgb(192, 255,   0),
-    rgb(0,   255,   0),
-    rgb(0,   255,   0),
-    rgb(0,   255,   0)
+    rgb(255, 0, 0),
+    rgb(255, 0, 0),
+    rgb(255, 0, 0),
+    rgb(255, 0, 0),
+    rgb(255, 64, 15),
+    rgb(255, 127, 36),
+    rgb(255, 127, 36),
+    rgb(255, 127, 36),
+    rgb(255, 200, 0),
+    rgb(255, 255, 0),
+    rgb(255, 255, 0),
+    rgb(255, 255, 0),
+    rgb(192, 255, 0),
+    rgb(0, 255, 0),
+    rgb(0, 255, 0),
+    rgb(0, 255, 0),
 ]
 
 
-def send_pectrum_to_matelight(spectrum_list):
-    # ip = "matelight"
-    ip = "matehost"  # only for docker compose
+def send_spectrum_to_matelight(spectrum_list):
+    ip = "matelight"
+    # ip = "matehost"  # only for docker compose
     port = 1337
 
     ml_buffer = numpy.zeros((ML_WIDTH, ML_HEIGHT))
 
     for x in range(len(spectrum_list)):
-        pix_heigt = int(spectrum_list[x] * ML_HEIGHT / MAX_AUDIO_HEIGHT)
-        for y in range(ML_HEIGHT - 1, ML_HEIGHT - pix_heigt, -1):
+        pix_height = int(spectrum_list[x] * ML_HEIGHT // MAX_AUDIO_HEIGHT)
+        for y in range(
+            ML_HEIGHT - 1, pix_height - ML_HEIGHT, -1
+        ):  # ML_HEIGHT - pix_height
             ml_buffer[x][y] = bar_colors[y]
 
-    checksum = b'\x00\x00\x00\x00'
+    checksum = b"\x00\x00\x00\x00"
 
-    image = b''
+    image = b""
 
     for y in range(ML_HEIGHT):
         for x in range(ML_WIDTH):
@@ -74,7 +77,7 @@ def send_pectrum_to_matelight(spectrum_list):
             g = (int(ml_buffer[x][y]) >> 8) & 0xFF
             b = (int(ml_buffer[x][y]) >> 16) & 0xFF
 
-            image += struct.pack('BBB', r, g, b)
+            image += struct.pack("BBB", r, g, b)
 
     image += checksum
 
@@ -84,21 +87,23 @@ def send_pectrum_to_matelight(spectrum_list):
 
 def dec(data):
     for i in range(23, len(data), 2):
-        b = bytearray(data[i:i+2])
+        b = bytearray(data[i : i + 2])
         if len(b) < 2:
             continue
 
-        d = struct.unpack('>H', b)
-        f = 128 + numpy.short(d[0]) / 256.0
+        d = struct.unpack(">H", b)
+        f = numpy.array(d[0]).astype(int) // 256.0
         yield f
 
 
-payload = '/batchsubscribe\x00'\
-          ',ssiii\x00\x00'\
-          'meters/15\x00\x00\x00'\
-          '/meters/15\x00\x00\x00\x00\x00\x10\x00\x00\x00\x10\x00\x00\x00\x01'
+payload = (
+    "/batchsubscribe\x00"
+    ",ssiii\x00\x00"
+    "meters/15\x00\x00\x00"
+    "/meters/15\x00\x00\x00\x00\x00\x10\x00\x00\x00\x10\x00\x00\x00\x01"
+)
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-sock.bind(('', 10042))
+sock.bind(("", 10042))
 start = 0
 
 print("udp socket created")
@@ -108,7 +113,7 @@ while True:
         print("xmit")
         # TODO: xmit /renew instead of /batchsubscribe again?
         # sock.sendto(payload.encode(), ('x32rack', 10023))
-        sock.sendto(payload.encode(), ('10.0.1.37', 10023))  # only for docker compose
+        sock.sendto(payload.encode(), ("10.0.1.37", 10023))  # only for docker compose
 
         start = time.time()
 
@@ -116,8 +121,8 @@ while True:
     response = sock.recvfrom(1024)[0]
 
     l = list(dec(response))
-    l = l[::2] # only use every second bar
-    l = l[5:-5] # cut off the first 5 and the last 5 bars
+    l = l[::2]  # only use every second bar
+    l = l[5:-5]  # cut off the first 5 and the last 5 bars
     # l = [2 * i for i in l] # double the gain
     # termplot.plot([128] + l)
-    send_pectrum_to_matelight(l)
+    send_spectrum_to_matelight(l)
