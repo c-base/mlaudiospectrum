@@ -42,27 +42,27 @@ ML_WIDTH = 40
 MAX_AUDIO_HEIGHT = 100
 
 
-def return_gb(red, green, blue):
+def return_rgb(red, green, blue):
     return red | green << 8 | blue << 16
 
 
 bar_colors = [
-    return_gb(255, 0, 0),
-    return_gb(255, 0, 0),
-    return_gb(255, 0, 0),
-    return_gb(255, 0, 0),
-    return_gb(255, 64, 15),
-    return_gb(255, 127, 36),
-    return_gb(255, 127, 36),
-    return_gb(255, 127, 36),
-    return_gb(255, 200, 0),
-    return_gb(255, 255, 0),
-    return_gb(255, 255, 0),
-    return_gb(255, 255, 0),
-    return_gb(192, 255, 0),
-    return_gb(0, 255, 0),
-    return_gb(0, 255, 0),
-    return_gb(0, 255, 0),
+    return_rgb(255, 0, 0),
+    return_rgb(255, 0, 0),
+    return_rgb(255, 0, 0),
+    return_rgb(255, 0, 0),
+    return_rgb(255, 64, 15),
+    return_rgb(255, 127, 36),
+    return_rgb(255, 127, 36),
+    return_rgb(255, 127, 36),
+    return_rgb(255, 200, 0),
+    return_rgb(255, 255, 0),
+    return_rgb(255, 255, 0),
+    return_rgb(255, 255, 0),
+    return_rgb(192, 255, 0),
+    return_rgb(0, 255, 0),
+    return_rgb(0, 255, 0),
+    return_rgb(0, 255, 0),
 ]
 
 

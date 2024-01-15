@@ -19,8 +19,6 @@ __status__ = "Prototype"
 
 import struct
 import numpy
-
-# import termplot
 import time
 import socket
 
@@ -54,18 +52,16 @@ bar_colors = [
 
 
 def send_spectrum_to_matelight(spectrum_list):
-    ip = "matelight"
-    # ip = "matehost"  # only for docker compose
+    ip = "matelight" # set ip to "matehost" for docker compose
     port = 1337
 
     ml_buffer = numpy.zeros((ML_WIDTH, ML_HEIGHT))
 
     for x in range(len(spectrum_list)):
-        pix_height = int(spectrum_list[x] * ML_HEIGHT // MAX_AUDIO_HEIGHT)
-        for y in range(
-            ML_HEIGHT - 1, pix_height - ML_HEIGHT, -1
-        ):  # ML_HEIGHT - pix_height
-            ml_buffer[x][y] = bar_colors[y]
+        pix_height = int((spectrum_list[x]- MAX_AUDIO_HEIGHT) * 2 * ML_HEIGHT/255)
+        for y in range(ML_HEIGHT-1, 0, -1):  # ML_HEIGHT - pix_height
+            if y >= ML_HEIGHT - pix_height:
+                ml_buffer[x][y] = bar_colors[y]
 
     checksum = b"\x00\x00\x00\x00"
 
@@ -113,7 +109,8 @@ while True:
         print("xmit")
         # TODO: xmit /renew instead of /batchsubscribe again?
         # sock.sendto(payload.encode(), ('x32rack', 10023))
-        sock.sendto(payload.encode(), ("10.0.1.37", 10023))  # only for docker compose
+        sock.sendto(payload.encode(), ("10.0.1.37", 10023))
+        # only for docker compose
 
         start = time.time()
 
@@ -123,6 +120,6 @@ while True:
     l = list(dec(response))
     l = l[::2]  # only use every second bar
     l = l[5:-5]  # cut off the first 5 and the last 5 bars
-    # l = [2 * i for i in l] # double the gain
+    # # double the gain
     # termplot.plot([128] + l)
     send_spectrum_to_matelight(l)
